@@ -129,15 +129,15 @@ POST /api/submissions
 
 ```ascii
 ┌──────────────────────────── Controllers Layer ────────────────────────────┐
-│                                                                          │
-│          ContestController    SubmissionController    UserController     │
-│                                                                          │
-└──────────────────────────────────┬───────────────────────────────────────┘
+│                                                                           │
+│          ContestController    SubmissionController    UserController      │
+│                                                                           │
+└──────────────────────────────────┬─────────────────────────────────────── ┘
                                    │
 ┌──────────────────────────── Service Layer ──────────────────────────────┐
 │                                                                         │
-│    ContestService    SubmissionService    CodeJudgeService             │
-│    UserService       ProblemService       DataInitializationService    │
+│    ContestService    SubmissionService    CodeJudgeService              │
+│    UserService       ProblemService       DataInitializationService     │
 │                                                                         │
 └──────────────────────────────────┬──────────────────────────────────────┘
                                    │
@@ -149,20 +149,9 @@ POST /api/submissions
                                    │
 ┌──────────────────────────── Data Layer ─────────────────────────────────┐
 │                                                                         │
-│                      H2 In-Memory Database                             │
+│                      H2 In-Memory Database                              │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
-```
-```
-
-This version:
-- Uses consistent spacing and alignment
-- Makes the layer boundaries clearer
-- Properly aligns the vertical connections
-- Includes all services in a more readable format
-- Uses ASCII box-drawing characters consistently
-- Wraps the diagram in a code block for proper markdown rendering
-
 ```
 
 
