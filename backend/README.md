@@ -2,6 +2,34 @@
 
 This is the backend service for the Shodh-a-Code contest platform, built with Spring Boot.
 
+## Note
+- Leaderboard results are based on polling not webSockets.
+- Currently no option to create contests on the site. I did not implement any auth system. 
+- Only contest 1 exists with 2 problems . 3 language options available (python,java and C++).
+
+## Test code for both problems in python:
+
+
+```python
+# Read the first line: n and target
+line1 = input().split()
+n = int(line1[0])
+target = int(line1[1])
+
+# Read the second line: array elements
+arr = list(map(int, input().split()))
+
+# Two Sum algorithm
+for i in range(n):
+    for j in range(i + 1, n):
+        if arr[i] + arr[j] == target:
+            print(i, j)
+            break
+    else:
+        continue
+    break
+```
+
 ## Features
 
 - **Contest Management**: Create and manage programming contests

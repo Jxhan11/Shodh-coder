@@ -182,6 +182,18 @@ public class CodeJudgeService {
             // First write the test input to a file
             Files.write(tempDir.resolve("input.txt"), testCase.getInput().getBytes());
             
+            // Debug: Log what we wrote to input.txt
+            logger.info("Test case input: '{}'", testCase.getInput());
+            logger.info("Input file created at: {}", tempDir.resolve("input.txt"));
+            
+            // Verify the file was created
+            if (Files.exists(tempDir.resolve("input.txt"))) {
+                String fileContent = new String(Files.readAllBytes(tempDir.resolve("input.txt")));
+                logger.info("Input file content: '{}'", fileContent);
+            } else {
+                logger.error("Input file was not created!");
+            }
+
             // Prepare docker command with proper resource limits
             List<String> command = new ArrayList<>();
             command.add("docker");
@@ -197,53 +209,53 @@ public class CodeJudgeService {
             command.add("/workspace");
             command.add(dockerImageName);
             
-            // Add language specific command with timeout
+            // Add language specific command with timeout and input redirection
             switch (submission.getLanguage().toLowerCase()) {
                 case "java":
-                    command.add("timeout");
-                    command.add(executionTimeoutSeconds + "s");
-                    command.add("java");
-                    command.add("Solution");
+                    command.add("sh");
+                    command.add("-c");
+                    command.add("timeout " + executionTimeoutSeconds + "s java Solution < input.txt");
                     break;
                 case "python":
-                    command.add("timeout");
-                    command.add(executionTimeoutSeconds + "s");
-                    command.add("python3");
-                    command.add("solution.py");
+                    command.add("sh");
+                    command.add("-c");
+                    command.add("timeout " + executionTimeoutSeconds + "s python3 solution.py < input.txt");
                     break;
                 case "cpp":
-                    command.add("timeout");
-                    command.add(executionTimeoutSeconds + "s");
-                    command.add("./solution");
+                    command.add("sh");
+                    command.add("-c");
+                    command.add("timeout " + executionTimeoutSeconds + "s ./solution < input.txt");
                     break;
             }
 
+            // Debug: Log the full command
+            logger.info("Docker command: {}", String.join(" ", command));
+
             ProcessBuilder pb = new ProcessBuilder(command);
-            pb.redirectInput(tempDir.resolve("input.txt").toFile());
+            // Remove this line since we're doing input redirection inside the container
+            // pb.redirectInput(tempDir.resolve("input.txt").toFile());
             pb.redirectErrorStream(true);
             
             // Start the process
             long startTime = System.currentTimeMillis();
             process = pb.start();
             
-            // Wait for completion with timeout (add 1 second buffer for the internal timeout)
+            // Wait for completion with timeout
             boolean completed = process.waitFor(executionTimeoutSeconds + 2, TimeUnit.SECONDS);
             long executionTime = System.currentTimeMillis() - startTime;
             
-            String output = "";
-            if (completed) {
-                // Only read output if process completed
-                output = readProcessOutput(process);
-            }
-            
             if (!completed) {
-                // Kill the process and container
                 killProcessAndContainer(process);
                 return new TestCaseResult(false, SubmissionStatus.TIME_LIMIT_EXCEEDED, 
                     "Time Limit Exceeded", executionTime, "Program exceeded time limit of " + executionTimeoutSeconds + " seconds");
             }
 
             int exitCode = process.exitValue();
+            String output = readProcessOutput(process);
+            
+            // Debug: Log the output and exit code
+            logger.info("Process exit code: {}", exitCode);
+            logger.info("Process output: '{}'", output);
             
             // Handle timeout exit code (124 from timeout command)
             if (exitCode == 124) {

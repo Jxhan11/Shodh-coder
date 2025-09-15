@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import { problemApi, submissionApi, contestApi } from "@/services/api";
 import ProblemPanel from "@/components/ProblemPanel";
@@ -10,15 +11,18 @@ import SubmissionHistory from "@/components/SubmissionHistory";
 import ConsoleOutput from "@/components/ConsoleOutput";
 
 export default function ContestPage() {
+  const { contestId } = useParams();
   const {
     contest,
     user,
     currentProblem,
+    setContest,
     setCurrentProblem,
     setSubmissions,
     setLeaderboard,
   } = useStore();
 
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"problem" | "submissions">(
     "problem"
   );
@@ -26,40 +30,53 @@ export default function ContestPage() {
     "console" | "submissions"
   >("console");
 
-  // Load initial data
+  // Load initial data on page load/refresh
   useEffect(() => {
     const loadInitialData = async () => {
-      if (!contest || !user) return;
-
       try {
-        // Load first problem by default
-        if (contest.problems.length > 0 && !currentProblem) {
-          const problemDetail = await problemApi.getProblem(
-            contest.problems[0].id
+        setLoading(true);
+
+        // If contest is not loaded, load it first
+        if (!contest && contestId) {
+          const contestData = await contestApi.getContest(Number(contestId));
+          setContest(contestData);
+
+          // Load first problem by default
+          if (contestData.problems.length > 0) {
+            const problemDetail = await problemApi.getProblem(
+              contestData.problems[0].id
+            );
+            setCurrentProblem(problemDetail);
+          }
+
+          // Load leaderboard
+          const leaderboard = await contestApi.getLeaderboard(
+            Number(contestId)
           );
-          setCurrentProblem(problemDetail);
+          setLeaderboard(leaderboard);
         }
 
-        // Load user submissions
-        const submissions = await submissionApi.getUserSubmissions(
-          user.id,
-          contest.id
-        );
-        setSubmissions(submissions);
-
-        // Load leaderboard
-        const leaderboard = await contestApi.getLeaderboard(contest.id);
-        setLeaderboard(leaderboard);
+        // Load user submissions if user exists
+        if (user && contest) {
+          const submissions = await submissionApi.getUserSubmissions(
+            user.id,
+            contest.id
+          );
+          setSubmissions(submissions);
+        }
       } catch (error) {
         console.error("Failed to load initial data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     loadInitialData();
   }, [
+    contestId,
     contest,
     user,
-    currentProblem,
+    setContest,
     setCurrentProblem,
     setSubmissions,
     setLeaderboard,
@@ -76,13 +93,35 @@ export default function ContestPage() {
       } catch (error) {
         console.error("Failed to update leaderboard:", error);
       }
-    }, 10000); // Update every 10 seconds
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [contest, setLeaderboard]);
 
-  if (!contest || !user) {
-    return null;
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-6 h-[calc(100vh-140px)] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading contest...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!contest) {
+    return (
+      <div className="container mx-auto px-4 py-6 h-[calc(100vh-140px)] flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Contest not found
+          </h2>
+          <p className="text-gray-600">
+            Please check the contest ID and try again.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -126,46 +165,11 @@ export default function ContestPage() {
             <CodeEditor />
           </div>
 
-          {/* Bottom Panel - Console Output / Submission History */}
-          <div className="h-64 pb-6">
-            {/* Bottom Tab Navigation */}
-            <div className="flex mb-2">
-              <button
-                onClick={() => setActiveBottomTab("console")}
-                className={`px-3 py-1 rounded-l text-sm font-medium transition-colors ${
-                  activeBottomTab === "console"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                Console
-              </button>
-              <button
-                onClick={() => setActiveBottomTab("submissions")}
-                className={`px-3 py-1 rounded-r text-sm font-medium transition-colors ${
-                  activeBottomTab === "submissions"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                History
-              </button>
-            </div>
-
-            {/* Bottom Tab Content */}
-            <div className="h-full">
-              {activeBottomTab === "console" ? (
-                <Leaderboard />
-              ) : (
-                <SubmissionHistory />
-              )}
-            </div>
-          </div>
+         
         </div>
 
-        {/* Right Panel - Leaderboard */}
+        {/* Right Panel - Console Output */}
         <div className="col-span-3">
-          {/* <Leaderboard /> */}
           <ConsoleOutput />
         </div>
       </div>

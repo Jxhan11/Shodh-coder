@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import { contestApi, userApi } from "@/services/api";
 import { Code, Users, Trophy, Clock } from "lucide-react";
+import { setCookie, getCookie, deleteCookie } from "@/utils/cookies";
 
 export default function JoinPage() {
   const router = useRouter();
-  const { setUser, setContest } = useStore();
+  const { setUser, setContest, setContestId, reset } = useStore();
   const [formData, setFormData] = useState({
     contestId: "1", // Default to contest 1
     username: "",
@@ -40,6 +41,49 @@ export default function JoinPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleJoinContest = async () => {
+    const { contestId, username } = formData;
+    if (!contestId || !username) {
+      alert("Please enter both Contest ID and Username");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Create or get user
+      const userData = await userApi.createUser(username);
+
+      // Save user and contest info to persistent storage
+      setUser(userData);
+      setContestId(Number(contestId));
+
+      // Save to cookies as backup
+      setCookie("shodh-user", JSON.stringify(userData), 1); // 1 day
+      setCookie("shodh-contest-id", contestId, 1);
+
+      // Navigate to contest
+      router.push(`/contest/${contestId}`);
+    } catch (error) {
+      console.error("Failed to join contest:", error);
+      alert("Failed to join contest. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    // Clear store
+    reset();
+
+    // Clear cookies
+    deleteCookie("shodh-user");
+    deleteCookie("shodh-contest-id");
+
+    // Redirect to home
+    router.push("/");
   };
 
   return (

@@ -141,12 +141,7 @@ export default function ConsoleOutput() {
                   </span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span className="text-gray-600">Language:</span>
-                <span className="font-mono uppercase">
-                  {currentSubmission.problemTitle}
-                </span>
-              </div>
+              
             </div>
           </div>
         )}

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
+import { devtools, persist } from "zustand/middleware";
 import {
   Contest,
   User,
@@ -38,6 +38,10 @@ interface ContestState {
   setCode: (code: string) => void;
   setIsSubmitting: (submitting: boolean) => void;
 
+  // Session state
+  contestId: number | null;
+  setContestId: (id: number | null) => void;
+
   // Actions
   reset: () => void;
 }
@@ -52,53 +56,67 @@ const initialState = {
   selectedLanguage: "java",
   code: "",
   isSubmitting: false,
+  contestId: null,
 };
 
 export const useStore = create<ContestState>()(
   devtools(
-    (set, get) => ({
-      ...initialState,
+    persist(
+      (set, get) => ({
+        ...initialState,
 
-      setUser: (user) => set({ user }),
+        setUser: (user) => set({ user }),
 
-      setContest: (contest) => set({ contest }),
+        setContest: (contest) => set({ contest }),
 
-      setCurrentProblem: (problem) =>
-        set({ currentProblem: problem, code: getDefaultCode(problem.title) }),
+        setCurrentProblem: (problem) =>
+          set({ currentProblem: problem, code: getDefaultCode(problem.title) }),
 
-      addSubmission: (submission) =>
-        set((state) => ({
-          submissions: [submission, ...state.submissions],
-          currentSubmission: submission,
-        })),
+        addSubmission: (submission) =>
+          set((state) => ({
+            submissions: [submission, ...state.submissions],
+            currentSubmission: submission,
+          })),
 
-      updateSubmission: (submission) =>
-        set((state) => ({
-          submissions: state.submissions.map((s) =>
-            s.id === submission.id ? submission : s
-          ),
-          currentSubmission:
-            state.currentSubmission?.id === submission.id
-              ? submission
-              : state.currentSubmission,
-        })),
+        updateSubmission: (submission) =>
+          set((state) => ({
+            submissions: state.submissions.map((s) =>
+              s.id === submission.id ? submission : s
+            ),
+            currentSubmission:
+              state.currentSubmission?.id === submission.id
+                ? submission
+                : state.currentSubmission,
+          })),
 
-      setSubmissions: (submissions) => set({ submissions }),
+        setSubmissions: (submissions) => set({ submissions }),
 
-      setLeaderboard: (leaderboard) => set({ leaderboard }),
+        setLeaderboard: (leaderboard) => set({ leaderboard }),
 
-      setSelectedLanguage: (language) =>
-        set((state) => ({
-          selectedLanguage: language,
-          code: getDefaultCode(state.currentProblem?.title || "", language),
-        })),
+        setSelectedLanguage: (language) =>
+          set((state) => ({
+            selectedLanguage: language,
+            code: getDefaultCode(state.currentProblem?.title || "", language),
+          })),
 
-      setCode: (code) => set({ code }),
+        setCode: (code) => set({ code }),
 
-      setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
+        setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
 
-      reset: () => set(initialState),
-    }),
+        setContestId: (contestId) => set({ contestId }),
+
+        reset: () => set(initialState),
+      }),
+      {
+        name: "contest-store",
+        // Only persist certain keys
+        partialize: (state) => ({
+          user: state.user,
+          selectedLanguage: state.selectedLanguage,
+          contestId: state.contestId,
+        }),
+      }
+    ),
     {
       name: "contest-store",
     }

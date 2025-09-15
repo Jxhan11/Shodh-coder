@@ -149,7 +149,7 @@ export default function CodeEditor() {
   const isSubmitDisabled = !user || !contest || !currentProblem || !code.trim() || isSubmitting;
 
   return (
-    <div className="card h-full flex flex-col">
+    <div className="card h-[65%] flex flex-col">
       {/* Header */}
       <div className="border-b p-4">
         <div className="flex items-center justify-between mb-3">
