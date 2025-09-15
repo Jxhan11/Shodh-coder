@@ -125,7 +125,6 @@ POST /api/submissions
 - **Gradle** - Build automation and dependency management
 
 ### Service Layer Architecture
-### Service Layer Architecture
 
 ```ascii
 ┌──────────────────────────── Controllers Layer ────────────────────────────┐
@@ -225,6 +224,31 @@ As a developer with Flutter/Provider experience, I chose **Zustand** for this pr
 - Team collaboration and maintainability
 
 ### Component Architecture
+# Project Structure - src/
+
+- **app/** (Next.js App Router)  
+  - `page.tsx` - Landing page (Contest join)  
+  - `layout.tsx` - Root layout with error boundary  
+  - **contest/[contestId]/**  
+    - `page.tsx` - Main contest interface  
+    - `layout.tsx` - Contest-specific layout  
+
+- **components/** (Reusable UI components)  
+  - `CodeEditor.tsx` - Monaco editor with language support  
+  - `ConsoleOutput.tsx` - Real-time execution output display  
+  - `Leaderboard.tsx` - Live rankings with auto-refresh  
+  - `ProblemPanel.tsx` - Problem description and test cases  
+  - `SubmissionHistory.tsx` - User's submission timeline  
+
+- **store/**  
+  - `useStore.ts` - Zustand global state management  
+
+- **services/**  
+  - `api.ts` - Axios HTTP client configuration  
+
+- **types/**  
+  - `api.ts` - TypeScript interface definitions  
+
 
 ### Key Frontend Features
 
