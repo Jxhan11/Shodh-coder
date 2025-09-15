@@ -25,8 +25,8 @@ public class CodeJudgeService {
     
     private static final Logger logger = LoggerFactory.getLogger(CodeJudgeService.class);
     
-    @Value("${app.docker.timeout:30}")
-    private int dockerTimeoutSeconds;
+    @Value("${code.execution.timeout:5}")
+    private int executionTimeoutSeconds;
     
     @Value("${app.docker.memory-limit:128m}")
     private String memoryLimit;
@@ -36,6 +36,9 @@ public class CodeJudgeService {
     
     public ExecutionResult executeCode(Submission submission, List<TestCase> testCases) {
         logger.info("Starting code execution for submission ID: {}", submission.getId());
+        logger.info("Execution timeout: {}", executionTimeoutSeconds);
+        logger.info("Memory limit: {}", memoryLimit);
+        logger.info("Docker image name: {}", dockerImageName);
         
         ExecutionResult result = new ExecutionResult();
         result.setStatus(SubmissionStatus.RUNNING);
@@ -158,7 +161,7 @@ public class CodeJudgeService {
                     "javac", "Solution.java");
             
             Process process = pb.start();
-            boolean finished = process.waitFor(dockerTimeoutSeconds, TimeUnit.SECONDS);
+            boolean finished = process.waitFor(executionTimeoutSeconds, TimeUnit.SECONDS);
             
             if (!finished) {
                 process.destroyForcibly();
@@ -174,112 +177,132 @@ public class CodeJudgeService {
     }
     
     private TestCaseResult runSingleTestCase(Path tempDir, Submission submission, TestCase testCase) {
-        TestCaseResult result = new TestCaseResult();
-        
+        Process process = null;
         try {
-            // Write input to file
-            Path inputFile = tempDir.resolve("input.txt");
-            Files.write(inputFile, testCase.getInput().getBytes());
+            // First write the test input to a file
+            Files.write(tempDir.resolve("input.txt"), testCase.getInput().getBytes());
             
-            // Prepare command based on language
+            // Prepare docker command with proper resource limits
             List<String> command = new ArrayList<>();
             command.add("docker");
             command.add("run");
             command.add("--rm");
+            command.add("--memory=" + memoryLimit);
+            command.add("--cpus=0.5");
+            command.add("--ulimit");
+            command.add("nproc=16:32");
             command.add("-v");
             command.add(tempDir.toString() + ":/workspace");
             command.add("-w");
             command.add("/workspace");
-            command.add("--memory=" + memoryLimit);
-            command.add("--cpus=0.5");
             command.add(dockerImageName);
             
-            // Add language-specific execution command
-            addLanguageCommand(command, submission.getLanguage());
-            
-            ProcessBuilder pb = new ProcessBuilder(command);
-            pb.redirectErrorStream(true); // Merge stderr with stdout for error capturing
-            
-            long startTime = System.currentTimeMillis();
-            Process process = pb.start();
-            
-            // Capture any error output from stderr/stdout (like compilation errors, runtime errors)
-            StringBuilder errorOutputBuilder = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    errorOutputBuilder.append(line).append("\n");
-                }
+            // Add language specific command with timeout
+            switch (submission.getLanguage().toLowerCase()) {
+                case "java":
+                    command.add("timeout");
+                    command.add(executionTimeoutSeconds + "s");
+                    command.add("java");
+                    command.add("Solution");
+                    break;
+                case "python":
+                    command.add("timeout");
+                    command.add(executionTimeoutSeconds + "s");
+                    command.add("python3");
+                    command.add("solution.py");
+                    break;
+                case "cpp":
+                    command.add("timeout");
+                    command.add(executionTimeoutSeconds + "s");
+                    command.add("./solution");
+                    break;
             }
+
+            ProcessBuilder pb = new ProcessBuilder(command);
+            pb.redirectInput(tempDir.resolve("input.txt").toFile());
+            pb.redirectErrorStream(true);
             
-            boolean finished = process.waitFor(submission.getProblem().getTimeLimit(), TimeUnit.SECONDS);
+            // Start the process
+            long startTime = System.currentTimeMillis();
+            process = pb.start();
+            
+            // Wait for completion with timeout (add 1 second buffer for the internal timeout)
+            boolean completed = process.waitFor(executionTimeoutSeconds + 2, TimeUnit.SECONDS);
             long executionTime = System.currentTimeMillis() - startTime;
             
-            if (!finished) {
-                process.destroyForcibly();
-                result.setStatus(SubmissionStatus.TIME_LIMIT_EXCEEDED);
-                result.setPassed(false);
-                result.setConsoleOutput("Time limit exceeded");
-                return result;
+            String output = "";
+            if (completed) {
+                // Only read output if process completed
+                output = readProcessOutput(process);
             }
             
-            String errorOutput = errorOutputBuilder.toString().trim();
+            if (!completed) {
+                // Kill the process and container
+                killProcessAndContainer(process);
+                return new TestCaseResult(false, SubmissionStatus.TIME_LIMIT_EXCEEDED, 
+                    "Time Limit Exceeded", executionTime, "Program exceeded time limit of " + executionTimeoutSeconds + " seconds");
+            }
+
+            int exitCode = process.exitValue();
             
-            if (process.exitValue() != 0) {
-                result.setStatus(SubmissionStatus.RUNTIME_ERROR);
-                result.setPassed(false);
-                result.setErrorMessage("Runtime error");
-                result.setConsoleOutput(errorOutput.isEmpty() ? "Runtime error occurred" : errorOutput);
-                return result;
+            // Handle timeout exit code (124 from timeout command)
+            if (exitCode == 124) {
+                return new TestCaseResult(false, SubmissionStatus.TIME_LIMIT_EXCEEDED,
+                    "Time Limit Exceeded", executionTime, "Program exceeded time limit of " + executionTimeoutSeconds + " seconds");
             }
             
-            // Read the program output from output.txt file
-            Path outputFile = tempDir.resolve("output.txt");
-            String programOutput = "";
-            if (Files.exists(outputFile)) {
-                programOutput = Files.readString(outputFile).trim();
+            if (exitCode != 0) {
+                return new TestCaseResult(false, SubmissionStatus.RUNTIME_ERROR,
+                    "Runtime Error", executionTime, output);
             }
             
-            // Set the program output as console output
-            result.setConsoleOutput(programOutput);
-            
-            // Compare with expected output
-            String expectedOutput = testCase.getExpectedOutput().trim();
-            boolean passed = programOutput.equals(expectedOutput);
-            
-            result.setPassed(passed);
-            result.setStatus(passed ? SubmissionStatus.ACCEPTED : SubmissionStatus.WRONG_ANSWER);
-            result.setExecutionTime(executionTime);
+            // Compare output
+            boolean matched = output.trim().equals(testCase.getExpectedOutput().trim());
+            return new TestCaseResult(matched, matched ? SubmissionStatus.ACCEPTED : SubmissionStatus.WRONG_ANSWER,
+                matched ? "Accepted" : "Wrong Answer", executionTime, output);
             
         } catch (Exception e) {
-            logger.error("Error running test case: {}", e.getMessage());
-            result.setStatus(SubmissionStatus.SYSTEM_ERROR);
-            result.setPassed(false);
-            result.setErrorMessage("System error: " + e.getMessage());
-            result.setConsoleOutput("System error occurred");
+            logger.error("Error running test case", e);
+            return new TestCaseResult(false, SubmissionStatus.SYSTEM_ERROR,
+                "System Error: " + e.getMessage(), 0, e.getMessage());
+        } finally {
+            if (process != null) {
+                process.destroyForcibly();
+            }
         }
-        
-        return result;
     }
-    
-    private void addLanguageCommand(List<String> command, String language) {
-        switch (language.toLowerCase()) {
-            case "java":
-                command.add("sh");
-                command.add("-c");
-                command.add("java Solution < input.txt > output.txt");
-                break;
-            case "python":
-                command.add("sh");
-                command.add("-c");
-                command.add("python3 solution.py < input.txt > output.txt");
-                break;
-            case "cpp":
-                command.add("sh");
-                command.add("-c");
-                command.add("g++ -o solution solution.cpp && ./solution < input.txt > output.txt");
-                break;
+
+    private void killProcessAndContainer(Process process) {
+        try {
+            // Kill the process tree
+            process.destroyForcibly();
+            
+            // Find and kill any running containers
+            ProcessBuilder pb = new ProcessBuilder(
+                "docker", "ps", "-q", "--filter", "ancestor=" + dockerImageName
+            );
+            Process listProcess = pb.start();
+            String containerId = new String(listProcess.getInputStream().readAllBytes()).trim();
+            
+            if (!containerId.isEmpty()) {
+                new ProcessBuilder("docker", "rm", "-f", containerId)
+                    .start()
+                    .waitFor(5, TimeUnit.SECONDS);
+            }
+        } catch (Exception e) {
+            logger.error("Error killing process/container", e);
         }
+    }
+
+    private String readProcessOutput(Process process) throws IOException {
+        StringBuilder output = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+        }
+        return output.toString();
     }
     
     private void cleanupTempDirectory(Path tempDir) {
@@ -333,6 +356,15 @@ public class CodeJudgeService {
         private String errorMessage;
         private long executionTime;
         private String consoleOutput;
+
+        // Add this constructor
+        public TestCaseResult(boolean passed, SubmissionStatus status, String errorMessage, long executionTime, String consoleOutput) {
+            this.passed = passed;
+            this.status = status;
+            this.errorMessage = errorMessage;
+            this.executionTime = executionTime;
+            this.consoleOutput = consoleOutput;
+        }
         
         // Getters and setters
         public boolean isPassed() { return passed; }
