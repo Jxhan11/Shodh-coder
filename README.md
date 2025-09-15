@@ -6,6 +6,7 @@ A comprehensive full-stack web application that enables real-time coding contest
 - Leaderboard results are based on polling not webSockets.
 - Currently no option to create contests on the site. I did not implement any auth system. 
 - Only contest 1 exists with 2 problems . 3 language options available (python,java and C++).
+- How contest 1 is made: Once ```./gradlew bootRun``` is executed it fills in the Sample data (contest and problems)
 
 ## Test code for both problems in python:
 - **Two sum**:
