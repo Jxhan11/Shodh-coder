@@ -42,7 +42,8 @@ A comprehensive full-stack web application that enables real-time coding contest
    ```bash
    cd backend
    ./build.sh  # Builds the backend JAR
-   docker-compose up --build
+   docker build -t shodh-code-runner ./docker/code-runner #Build docker image to run code
+   ./gradlew bootRun #Start the spring boot server                    
    ```
 
    The backend will be available at: `http://localhost:8080`
