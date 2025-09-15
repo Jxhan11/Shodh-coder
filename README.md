@@ -125,6 +125,46 @@ POST /api/submissions
 - **Gradle** - Build automation and dependency management
 
 ### Service Layer Architecture
+### Service Layer Architecture
+
+```ascii
+┌──────────────────────────── Controllers Layer ────────────────────────────┐
+│                                                                          │
+│          ContestController    SubmissionController    UserController     │
+│                                                                          │
+└──────────────────────────────────┬───────────────────────────────────────┘
+                                   │
+┌──────────────────────────── Service Layer ──────────────────────────────┐
+│                                                                         │
+│    ContestService    SubmissionService    CodeJudgeService             │
+│    UserService       ProblemService       DataInitializationService    │
+│                                                                         │
+└──────────────────────────────────┬──────────────────────────────────────┘
+                                   │
+┌──────────────────────────── Repository Layer ───────────────────────────┐
+│                                                                         │
+│    ContestRepo    SubmissionRepo    UserRepo    ProblemRepo             │
+│                                                                         │
+└──────────────────────────────────┬──────────────────────────────────────┘
+                                   │
+┌──────────────────────────── Data Layer ─────────────────────────────────┐
+│                                                                         │
+│                      H2 In-Memory Database                             │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+```
+
+This version:
+- Uses consistent spacing and alignment
+- Makes the layer boundaries clearer
+- Properly aligns the vertical connections
+- Includes all services in a more readable format
+- Uses ASCII box-drawing characters consistently
+- Wraps the diagram in a code block for proper markdown rendering
+
+```
+
 
 ### Key Design Decisions
 
