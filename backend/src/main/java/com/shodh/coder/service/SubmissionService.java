@@ -132,6 +132,10 @@ public class SubmissionService {
             submission.setExecutionTime(result.getExecutionTime());
             submission.setCompletedAt(LocalDateTime.now());
 
+            // Store console output and compilation errors
+            submission.setConsoleOutput(result.getConsoleOutput());
+            submission.setCompilationError(result.getCompilationError());
+
             if (result.getErrorMessage() != null) {
                 submission.setResult(result.getErrorMessage());
             } else {

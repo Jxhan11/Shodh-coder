@@ -223,7 +223,6 @@ As a developer with Flutter/Provider experience, I chose **Zustand** for this pr
 - Middleware ecosystem (persistence, logging, etc.)
 - Team collaboration and maintainability
 
-### Component Architecture
 # Project Structure - src/
 
 - **app/** (Next.js App Router)  

@@ -7,6 +7,7 @@ import ProblemPanel from "@/components/ProblemPanel";
 import CodeEditor from "@/components/CodeEditor";
 import Leaderboard from "@/components/Leaderboard";
 import SubmissionHistory from "@/components/SubmissionHistory";
+import ConsoleOutput from "@/components/ConsoleOutput";
 
 export default function ContestPage() {
   const {
@@ -21,6 +22,9 @@ export default function ContestPage() {
   const [activeTab, setActiveTab] = useState<"problem" | "submissions">(
     "problem"
   );
+  const [activeBottomTab, setActiveBottomTab] = useState<
+    "console" | "submissions"
+  >("console");
 
   // Load initial data
   useEffect(() => {
@@ -85,7 +89,7 @@ export default function ContestPage() {
     <div className="container mx-auto px-4 py-6">
       <div className="grid grid-cols-12 gap-6 h-[calc(100vh-140px)]">
         {/* Left Panel - Problem/Submissions */}
-        <div className="col-span-5 flex flex-col">
+        <div className="col-span-4 flex flex-col">
           {/* Tab Navigation */}
           <div className="flex mb-4">
             <button
@@ -117,13 +121,52 @@ export default function ContestPage() {
         </div>
 
         {/* Middle Panel - Code Editor */}
-        <div className="col-span-4">
-          <CodeEditor />
+        <div className="col-span-5 flex flex-col">
+          <div className="flex-1 mb-4">
+            <CodeEditor />
+          </div>
+
+          {/* Bottom Panel - Console Output / Submission History */}
+          <div className="h-64 pb-6">
+            {/* Bottom Tab Navigation */}
+            <div className="flex mb-2">
+              <button
+                onClick={() => setActiveBottomTab("console")}
+                className={`px-3 py-1 rounded-l text-sm font-medium transition-colors ${
+                  activeBottomTab === "console"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                Console
+              </button>
+              <button
+                onClick={() => setActiveBottomTab("submissions")}
+                className={`px-3 py-1 rounded-r text-sm font-medium transition-colors ${
+                  activeBottomTab === "submissions"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                History
+              </button>
+            </div>
+
+            {/* Bottom Tab Content */}
+            <div className="h-full">
+              {activeBottomTab === "console" ? (
+                <Leaderboard />
+              ) : (
+                <SubmissionHistory />
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Right Panel - Leaderboard */}
         <div className="col-span-3">
-          <Leaderboard />
+          {/* <Leaderboard /> */}
+          <ConsoleOutput />
         </div>
       </div>
     </div>

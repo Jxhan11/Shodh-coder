@@ -17,6 +17,8 @@ public class SubmissionResponseDto {
     private LocalDateTime completedAt;
     private String username;
     private String problemTitle;
+    private String consoleOutput;
+    private String compilationError;
 
     public SubmissionResponseDto() {}
 
@@ -32,6 +34,8 @@ public class SubmissionResponseDto {
         this.completedAt = submission.getCompletedAt();
         this.username = submission.getUser().getUsername();
         this.problemTitle = submission.getProblem().getTitle();
+        this.consoleOutput = submission.getConsoleOutput();
+        this.compilationError = submission.getCompilationError();
     }
 
     // Getters and Setters
@@ -67,4 +71,11 @@ public class SubmissionResponseDto {
     
     public String getProblemTitle() { return problemTitle; }
     public void setProblemTitle(String problemTitle) { this.problemTitle = problemTitle; }
+
+    // New getters and setters
+    public String getConsoleOutput() { return consoleOutput; }
+    public void setConsoleOutput(String consoleOutput) { this.consoleOutput = consoleOutput; }
+
+    public String getCompilationError() { return compilationError; }
+    public void setCompilationError(String compilationError) { this.compilationError = compilationError; }
 }

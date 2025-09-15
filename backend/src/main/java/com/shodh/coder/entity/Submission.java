@@ -1,9 +1,19 @@
 package com.shodh.coder.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "submissions")
@@ -44,6 +54,13 @@ public class Submission {
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    // Add console output fields
+    @Column(name = "console_output", columnDefinition = "TEXT")
+    private String consoleOutput;
+
+    @Column(name = "compilation_error", columnDefinition = "TEXT")
+    private String compilationError;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -173,6 +190,23 @@ public class Submission {
 
     public void setContest(Contest contest) {
         this.contest = contest;
+    }
+
+    // New getters and setters for console output
+    public String getConsoleOutput() {
+        return consoleOutput;
+    }
+
+    public void setConsoleOutput(String consoleOutput) {
+        this.consoleOutput = consoleOutput;
+    }
+
+    public String getCompilationError() {
+        return compilationError;
+    }
+
+    public void setCompilationError(String compilationError) {
+        this.compilationError = compilationError;
     }
 
     public boolean isCompleted() {

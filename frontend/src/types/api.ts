@@ -60,7 +60,9 @@ export interface Submission {
   completedAt: string | null;
   username: string;
   problemTitle: string;
-  language: string;
+  // Add console output fields
+  consoleOutput?: string;
+  compilationError?: string;
 }
 
 export type SubmissionStatus =
