@@ -2,6 +2,43 @@
 
 A comprehensive full-stack web application that enables real-time coding contests with live code judging, leaderboards, and submission tracking. Built with Spring Boot backend and Next.js frontend, featuring containerized code execution for secure and isolated code evaluation.
 
+## Note
+- Leaderboard results are based on polling not webSockets.
+- Currently no option to create contests on the site. I did not implement any auth system. 
+- Only contest 1 exists with 2 problems . 3 language options available (python,java and C++).
+
+## Test code for both problems in python:
+- **Two sum**:
+```python
+# Read the first line: n and target
+line1 = input().split()
+n = int(line1[0])
+target = int(line1[1])
+
+# Read the second line: array elements
+arr = list(map(int, input().split()))
+
+# Two Sum algorithm
+for i in range(n):
+    for j in range(i + 1, n):
+        if arr[i] + arr[j] == target:
+            print(i, j)
+            break
+    else:
+        continue
+    break
+```
+- **Factorial**:
+```python
+import math
+
+# Read input
+n = int(input())
+
+# Calculate factorial using math.factorial
+print(math.factorial(n))
+```
+
 ## 🏗️ Architecture Overview
 | Component | Description    | Features                                  |
 |-----------|----------------|-------------------------------------------|
