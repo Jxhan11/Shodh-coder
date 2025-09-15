@@ -3,20 +3,26 @@
 A comprehensive full-stack web application that enables real-time coding contests with live code judging, leaderboards, and submission tracking. Built with Spring Boot backend and Next.js frontend, featuring containerized code execution for secure and isolated code evaluation.
 
 ## 🏗️ Architecture Overview
-┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│ Frontend │ │ Backend │ │ Docker │
-│ (Next.js) │◄──►│ (Spring Boot) │◄──►│ Code Runner │
-│ │ │ │ │ │
-│ • React/TSX │ │ • REST API │ │ • Java/Python │
-│ • Zustand Store │ │ • JPA/H2 DB │ │ • C++ Runtime │
-│ • Monaco Editor │ │ • Async Proc. │ │ • Isolated Exec │
-│ • Tailwind CSS │ │ • Docker Orch. │ │ • Resource Limits│
-└─────────────────┘ └─────────────────┘ └─────────────────┘
+| Component | Description    | Features                                  |
+|-----------|----------------|-------------------------------------------|
+| Frontend  | (Next.js)      | - React/TSX                               |
+|           |                | - Zustand Store                           |
+|           |                | - Monaco Editor                           |
+|           |                | - Tailwind CSS                            |
+| Backend   | (Spring Boot)  | - REST API                                |
+|           |                | - JPA/H2 DB                               |
+|           |                | - Async Proc.                             |
+|           |                | - Docker Orch.                            |
+| Docker    | Code Runner    | - Java/Python                             |
+|           |                | - C++ Runtime                             |
+|           |                | - Isolated Exec                           |
+|           |                | - Resource Limits                         |
 
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - **Docker & Docker Compose** (required for containerized execution)
 - **Java 17+** (for backend development)
 - **Node.js 18+** (for frontend development)
@@ -25,25 +31,30 @@ A comprehensive full-stack web application that enables real-time coding contest
 ### Running the Application
 
 1. **Clone the repository:**
+
    ```bash
-   git clone <your-repository-url>
+   git clone https://github.com/Jxhan11/Shodh-coder.git
    cd Shodh-coder
    ```
 
 2. **Start the backend with Docker:**
+
    ```bash
    cd backend
    ./build.sh  # Builds the backend JAR
    docker-compose up --build
    ```
+
    The backend will be available at: `http://localhost:8080`
 
 3. **Start the frontend (in a separate terminal):**
+
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
+
    The frontend will be available at: `http://localhost:3000`
 
 4. **Access the application:**
@@ -52,6 +63,7 @@ A comprehensive full-stack web application that enables real-time coding contest
    - Try solving the pre-loaded problems: "Two Sum" and "Factorial"
 
 ### Alternative: Full Docker Setup (Optional)
+
 ```bash
 # Run everything with Docker Compose
 docker-compose up --build
@@ -61,18 +73,19 @@ docker-compose up --build
 
 ### Core Endpoints
 
-| Method | Endpoint | Description | Request Body | Response |
-|--------|----------|-------------|--------------|----------|
-| `GET` | `/api/contests/{contestId}` | Fetch contest details with problems | - | `ContestResponseDto` |
-| `POST` | `/api/submissions` | Submit code for judging | `SubmissionRequestDto` | `SubmissionResponseDto` |
-| `GET` | `/api/submissions/{submissionId}` | Get submission status & results | - | `SubmissionResponseDto` |
-| `GET` | `/api/contests/{contestId}/leaderboard` | Live contest leaderboard | - | `List<LeaderboardEntryDto>` |
-| `GET` | `/api/problems/{problemId}` | Get problem details & test cases | - | `ProblemDetailDto` |
-| `POST` | `/api/users` | Create a new user | `{username, email}` | `UserResponseDto` |
+| Method | Endpoint                                | Description                         | Request Body           | Response                    |
+| ------ | --------------------------------------- | ----------------------------------- | ---------------------- | --------------------------- |
+| `GET`  | `/api/contests/{contestId}`             | Fetch contest details with problems | -                      | `ContestResponseDto`        |
+| `POST` | `/api/submissions`                      | Submit code for judging             | `SubmissionRequestDto` | `SubmissionResponseDto`     |
+| `GET`  | `/api/submissions/{submissionId}`       | Get submission status & results     | -                      | `SubmissionResponseDto`     |
+| `GET`  | `/api/contests/{contestId}/leaderboard` | Live contest leaderboard            | -                      | `List<LeaderboardEntryDto>` |
+| `GET`  | `/api/problems/{problemId}`             | Get problem details & test cases    | -                      | `ProblemDetailDto`          |
+| `POST` | `/api/users`                            | Create a new user                   | `{username, email}`    | `UserResponseDto`           |
 
 ### Request/Response Examples
 
 **Submit Code:**
+
 ```json
 POST /api/submissions
 {
@@ -85,6 +98,7 @@ POST /api/submissions
 ```
 
 **Submission Response:**
+
 ```json
 {
   "id": 123,
@@ -103,6 +117,7 @@ POST /api/submissions
 ## 🏛️ Backend Architecture
 
 ### Technology Stack
+
 - **Spring Boot 3.5.5** - Web framework and dependency injection
 - **Spring Data JPA** - Object-relational mapping and database operations
 - **H2 Database** - In-memory database for development and testing
@@ -110,40 +125,23 @@ POST /api/submissions
 - **Gradle** - Build automation and dependency management
 
 ### Service Layer Architecture
-│ Controllers Layer │
-│ ContestController │ SubmissionController │ UserController │
-└─────────────────────┬───────────────────────────────────────┘
-│
-┌─────────────────────▼───────────────────────────────────────┐
-│ Service Layer │
-│ ContestService │ SubmissionService │ CodeJudgeService │
-│ UserService │ ProblemService │ DataInitService │
-└─────────────────────┬───────────────────────────────────────┘
-│
-┌─────────────────────▼───────────────────────────────────────┐
-│ Repository Layer │
-│ ContestRepo │ SubmissionRepo │ UserRepo │ ProblemRepo │
-└─────────────────────┬───────────────────────────────────────┘
-│
-┌─────────────────────▼───────────────────────────────────────┐
-│ Data Layer │
-│ H2 In-Memory Database │
-└─────────────────────────────────────────────────────────────┘
-
 
 ### Key Design Decisions
 
 1. **Asynchronous Processing:**
+
    - Submissions are processed asynchronously using `@Async` annotation
    - Immediate response with submission ID, status polling for updates
    - Prevents blocking of API threads during long-running code execution
 
 2. **Docker Orchestration:**
+
    - Custom `CodeJudgeService` manages Docker containers programmatically
    - Each submission runs in an isolated container with resource limits
    - Supports Java, Python, and C++ with secure execution environment
 
 3. **Data Model:**
+
    ```
    Contest (1) ──► (n) Problem (1) ──► (n) TestCase
       │                 │
@@ -191,46 +189,30 @@ As a developer with Flutter/Provider experience, I chose **Zustand** for this pr
 4. **TypeScript Support:** Excellent TypeScript integration out of the box
 
 **For Production/User State Management:** In a larger application with complex user authentication and permissions, I would recommend **Redux Toolkit** for:
+
 - Better DevTools debugging
 - Standardized patterns for enterprise applications
 - Middleware ecosystem (persistence, logging, etc.)
 - Team collaboration and maintainability
 
 ### Component Architecture
-src/
-├── app/ # Next.js App Router
-│ ├── page.tsx # Landing page (Contest join)
-│ ├── layout.tsx # Root layout with error boundary
-│ └── contest/[contestId]/
-│ ├── page.tsx # Main contest interface
-│ └── layout.tsx # Contest-specific layout
-├── components/ # Reusable UI components
-│ ├── CodeEditor.tsx # Monaco editor with language support
-│ ├── ConsoleOutput.tsx # Real-time execution output display
-│ ├── Leaderboard.tsx # Live rankings with auto-refresh
-│ ├── ProblemPanel.tsx # Problem description and test cases
-│ └── SubmissionHistory.tsx # User's submission timeline
-├── store/
-│ └── useStore.ts # Zustand global state management
-├── services/
-│ └── api.ts # Axios HTTP client configuration
-└── types/
-└── api.ts # TypeScript interface definitions
-
 
 ### Key Frontend Features
 
 1. **Real-time Updates:**
+
    - Polling every 1-2 seconds for submission status
    - Live leaderboard updates every 15 seconds
    - Optimistic UI updates for better user experience
 
 2. **Code Editor Integration:**
+
    - Monaco Editor with syntax highlighting
    - Language-specific templates (Java, Python, C++)
    - Auto-completion and error detection
 
 3. **Responsive Design:**
+
    - Three-panel layout: Problems | Editor | Leaderboard
    - Mobile-responsive with collapsible panels
    - Console output panel for debugging
@@ -245,6 +227,7 @@ src/
 ### Code Execution Environment
 
 **Custom Docker Image (`shodh-code-runner`):**
+
 ```dockerfile
 FROM ubuntu:22.04
 RUN apt-get update && apt-get install -y \
@@ -259,14 +242,17 @@ WORKDIR /workspace
 ### Orchestration Challenges & Solutions
 
 1. **Security Isolation:**
+
    - **Challenge:** User code could be malicious or resource-intensive
    - **Solution:** Docker containers with strict memory/CPU limits, read-only mounts
 
 2. **File System Management:**
+
    - **Challenge:** Temporary file cleanup and concurrent access
    - **Solution:** UUID-based temporary directories with automatic cleanup
 
 3. **Process Communication:**
+
    - **Challenge:** Capturing stdout/stderr from Docker containers
    - **Solution:** ProcessBuilder with stream redirection and BufferedReader
 
@@ -283,14 +269,17 @@ WORKDIR /workspace
 ## 🧪 Testing & Development
 
 ### Sample Data
+
 The application comes pre-populated with:
+
 - **Contest:** "Sample Contest" (ID: 1)
-- **Problems:** 
+- **Problems:**
   - Two Sum (Array problem)
   - Factorial (Mathematical problem)
 - **Test Cases:** Multiple input/output pairs for validation
 
 ### Development Workflow
+
 ```bash
 # Backend development
 cd backend
@@ -305,6 +294,7 @@ docker run --rm -v $(pwd):/workspace -w /workspace shodh-code-runner java Soluti
 ```
 
 ### Manual Testing
+
 1. Join contest with any username
 2. Select a problem from the left panel
 3. Write code in the editor (templates provided)
@@ -315,6 +305,7 @@ docker run --rm -v $(pwd):/workspace -w /workspace shodh-code-runner java Soluti
 ## 🚀 Production Considerations
 
 ### Scalability Improvements
+
 - Replace H2 with PostgreSQL for persistence
 - Implement Redis for caching and session management
 - Add rate limiting and authentication
@@ -322,6 +313,7 @@ docker run --rm -v $(pwd):/workspace -w /workspace shodh-code-runner java Soluti
 - Container orchestration with Kubernetes
 
 ### Security Enhancements
+
 - JWT-based authentication
 - Input sanitization and validation
 - Container image scanning
@@ -329,6 +321,7 @@ docker run --rm -v $(pwd):/workspace -w /workspace shodh-code-runner java Soluti
 - Audit logging for submissions
 
 ### Monitoring & Observability
+
 - Application metrics with Micrometer
 - Distributed tracing with Zipkin
 - Error tracking with Sentry
@@ -339,6 +332,7 @@ docker run --rm -v $(pwd):/workspace -w /workspace shodh-code-runner java Soluti
 ## 📝 Additional Notes
 
 This implementation demonstrates a complete full-stack application with:
+
 - ✅ RESTful API design and implementation
 - ✅ Real-time web interface with live updates
 - ✅ Secure containerized code execution
