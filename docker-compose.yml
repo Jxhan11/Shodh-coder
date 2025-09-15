@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - APP_DOCKER_IMAGE_NAME=shodh-code-runner
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Mount Docker socket for container orchestration
+      - /tmp:/tmp # Mount temp directory for code execution
+    depends_on:
+      - code-runner-build
+    networks:
+      - shodh-network
+
+  # Code Runner Image Builder
+  code-runner-build:
+    build:
+      context: ./backend/docker/code-runner
+      dockerfile: Dockerfile
+    image: shodh-code-runner
+    command: ["echo", "Code runner image built"]
+    networks:
+      - shodh-network
+
+  # Frontend Service (to be added later)
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - REACT_APP_API_URL=http://localhost:8080
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - shodh-network
+
+networks:
+  shodh-network:
+    driver: bridge
+
+volumes:
+  backend-data:
