@@ -69,41 +69,8 @@ view, a code editor, and the leaderboard.
 /api/contests/{contestId}/leaderboard periodically (e.g., every 15-30 seconds) to keep the
 rankings fresh and simulate a live event.
 
-# How to Submit
-
-You will be asked to provide the following item:
-● **Link to your GitHub Repository**
-○ Your repository must be public and well-organized, with separate, clearly-marked
-folders for the frontend and backend.
 
 
-○ It must include a single, top-level **README.md** file. This document is the primary
-artifact we will evaluate to understand your thinking.
-Your **README.md** file must include:
-● **Setup Instructions:** Clear, step-by-step instructions on how to set up the environment
-and run the entire application locally. Using a single docker-compose.yml file is highly
-encouraged for simplicity.
-● **API Design:** A brief but clear overview of the API endpoints you created and their
-expected request/response formats.
-● **Design Choices & Justification:** A concise section explaining the key architectural
-decisions you made. For example:
-○ How did you structure your services on the backend?
-○ Why did you choose your specific state management approach on the frontend?
-○ What were the biggest challenges with the Docker orchestration, and what
-trade-offs did you make?
 
-# Evaluation Criteria
-
-You will be evaluated on:
-● **Technical Execution:** The correctness and robustness of your end-to-end
-implementation. Does the application work as specified?
-● **Backend Quality:** The clarity of your API design, the logic of your data models, and the
-structure of your Spring Boot application, especially the Docker integration.
-● **Frontend Quality:** Your ability to build a functional and intuitive UI with React, including
-your component structure, state management, and handling of asynchronous events.
-● **DevOps & Systems Proficiency:** The quality of your Dockerfile and the reliability of the
-code execution engine you built.
-● **Communication:** The overall clarity, thoroughness, and professionalism of your
-README.md file.
 
 
