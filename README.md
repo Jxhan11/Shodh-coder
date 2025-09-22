@@ -8,6 +8,9 @@ A comprehensive full-stack web application that enables real-time coding contest
 - Only contest 1 exists with 2 problems . 3 language options available (python,java and C++).
 - How contest 1 is made: Once ```./gradlew bootRun``` is executed it fills in the Sample data (contest and problems)
 
+# BUGS
+- Memory usage is not being tracked properly. Shows 0 bytes even when running a memory heavy python code
+
 ## Test code for both problems in python:
 - **Two sum**:
 ```python
